@@ -7,6 +7,11 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
+if [[ ! -f /etc/os-release ]]; then
+    echo "ERROR: Cannot identify OS"
+    exit 1
+fi
+
 . /etc/os-release
 
 case "$ID" in
@@ -17,23 +22,36 @@ case "$ID" in
         ;;
 esac
 
-echo "=== Homelab Node Exporter Installer ==="
+echo "=================================="
+echo " Homelab Node Exporter Installer"
+echo "=================================="
 echo "Hostname: $(hostname)"
 echo "OS: $PRETTY_NAME"
+echo
 
-echo "[1/3] Updating package lists..."
+echo "[1/4] Updating package lists..."
 apt-get update
 
-echo "[2/3] Installing Node Exporter..."
-DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y curl prometheus-node-exporter
+echo "[2/4] Installing basic tools..."
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    curl \
+    wget \
+    nano \
+    ca-certificates \
+    dnsutils \
+    iputils-ping
 
-echo "[3/3] Enabling service..."
+echo "[3/4] Installing Node Exporter..."
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    prometheus-node-exporter
+
+echo "[4/4] Enabling Node Exporter..."
 systemctl enable --now prometheus-node-exporter
 
+echo
 if curl -fsS --max-time 5 \
     http://127.0.0.1:9100/metrics >/dev/null; then
-    echo "SUCCESS: Node Exporter is running"
+    echo "SUCCESS: Node Exporter is running!"
 else
     echo "ERROR: Node Exporter is not responding"
     exit 1
@@ -41,6 +59,8 @@ fi
 
 echo
 echo "Hostname: $(hostname)"
+echo "IP addresses:"
 hostname -I 2>/dev/null || true
-echo "Port: 9100"
+echo
+echo "Metrics port: 9100"
 echo "Installation completed."
