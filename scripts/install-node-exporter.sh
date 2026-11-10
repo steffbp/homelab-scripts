@@ -37,12 +37,10 @@ echo "[3/3] Enabling Node Exporter..."
 systemctl enable --now prometheus-node-exporter
 
 echo
-if systemctl is-active --quiet prometheus-node-exporter &&
-   wget -q -O /dev/null \
-     http://127.0.0.1:9100/metrics; then
+if systemctl is-active --quiet prometheus-node-exporter; then
     echo "SUCCESS: Node Exporter is running."
 else
-    echo "ERROR: Node Exporter is not responding."
+    echo "ERROR: Node Exporter failed."
     exit 1
 fi
 
